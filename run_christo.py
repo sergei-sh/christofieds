@@ -26,7 +26,7 @@ np.random.seed(0)
 time_lst = []
 factor = []
 try:
-    for vert in range(3, 30):
+    for vert in range(3, 60):
         tsp = half_mx_dist(np.random.randint(low=1, high=100, size=(vert, vert)))
         
         tm = time.time()
