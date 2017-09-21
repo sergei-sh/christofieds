@@ -2,7 +2,8 @@
 Updated: 2017
 Author: Sergei Shliakhtin
 Contact: xxx.serj@gmail.com
-Compiler: Python3
+Parser: Python3
+Complexity: O(V^3)
 Notes: 
 
 Currently uses NetworkX for Blossom algorithm and graph_algos for other algorithms
@@ -17,23 +18,23 @@ def find_tsp_route(dist_mx):
     """Implements Chrisofieds algorithm to find a minimum-weight circuit (1.5 approximate) in a complete weighted
     graph, following triangle inequality
 
-    dist_mx - distance matrix, following triangle inequality
+    dist_mx - distance matrix, following triangle inequality. 0-th vertex is assumed to be the start
     return - tuple of vertices to follow
     """
 
 #Refer for set names G, T, O, M, to https://en.wikipedia.org/wiki/Christofides_algorithm
 
-    import matplotlib.pyplot as plt
 
 #Initial complete graph    
     G = dist_mx
 #Extract Minimum Spanning Tree    
-    T = prims_mst(dist_mx=G)
+    T = prims_mst(dist_mx=G) # O(V^2)
 #Vertices with odd degree of MST
-    O = odd_vertices(dist_mx=T)
+    print("MST", T)
+    O = odd_vertices(dist_mx=T) #O(V^2)
     print("O ", O)
 #Induced subgraph of G by O 
-    (I, i_to_g_converter) = induced_subgraph(dist_mx=G, vertices=O)
+    (I, i_to_g_converter) = induced_subgraph(dist_mx=G, vertices=O) # ?O(V^2)
     print("I ", I)
 
     assert I.size == np.count_nonzero(I), """Zero weights are not allowed (would mean 2 vertices are the same"""
@@ -42,34 +43,48 @@ def find_tsp_route(dist_mx):
 
 #Invert all weights so that max_weight_matching gives us minimum-weight matching
 #Weights must be positive (checked above)
-    I_inv = np.float_power(I, -1)
+    I_inv = np.float_power(I, -1) # O(V^2)
 
     graph_I = nx.from_numpy_matrix(A=I_inv)
     print("Ix ", graph_I)
 #Find a minimum-weight perfect matching
-    dict_min = nx.max_weight_matching(G=graph_I, maxcardinality=True)
+    dict_min = nx.max_weight_matching(G=graph_I, maxcardinality=True) # O(V^3)
+    print("Perf matching: ", dict_min)
 #Returns dictionary where each edge is doubled. I don't know why. The input Graph is clearly not
 #a DiGraph...
     M = nx.Graph()
     M.add_edges_from([(i_to_g_converter(k), i_to_g_converter(v)) 
         for k, v 
-        in dict_min.items()])
+        in dict_min.items()]) # O(E)
 
+    print("M ", M.edges())        
+
+# Compose MST and p.matching    
     M_mg = nx.MultiGraph(M)
     T_mg = dist_mx_to_networkx(T, netx_obj=nx.MultiGraph())
-    H = nx.compose(M_mg, T_mg)
+    
+    T_mg.add_edges_from(M_mg.edges()) # ?O(2V)
+    H = T_mg 
+    print("H ", H.edges())
 
-    nx.draw_circular(H, with_labels=True)
-    #nx.draw_circular(nx.from_numpy_matrix(G), with_labels=True)
-    plt.show()
+    eulerian_crt_gen = nx.eulerian_circuit(H) # ?O(V + E)
+    eulerian_crt = np.array([v for v in eulerian_crt_gen]).flatten()
+    print("Eul: ", eulerian_crt)
+    u, idxs = np.unique(eulerian_crt, return_index=True) # O(V^2)
+    hamilton_crt = np.concatenate((eulerian_crt[idxs], np.array([0])), axis=0)
+
+    return hamilton_crt
 
 def dist_mx_to_networkx(dist_mx, netx_obj=nx.Graph):
-#creates graph but includes INF edges
-   graph = nx.from_numpy_matrix(dist_mx, create_using=netx_obj) 
-#INF edges coordinates as 2 rows
-   inf_coord = np.where(dist_mx == INF)
-   graph.remove_edges_from(zip(inf_coord[0], inf_coord[1]))
-   return graph
+    """Convert distance matrix to networkx graph"""
+    #creates graph but includes INF edges
+    graph = nx.from_numpy_matrix(dist_mx, create_using=netx_obj) 
+    
+    #INF edges coordinates as 2 rows
+    inf_coord = np.where(dist_mx == INF)
+    #remove INF edges   
+    graph.remove_edges_from(zip(inf_coord[0], inf_coord[1]))
+    return graph
 
 def odd_vertices(dist_mx):
     """Take odd degree vertices from a graph   
