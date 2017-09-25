@@ -12,7 +12,7 @@ The complexity is O(V^3)
 
 The approximation ration is 1.5 at most
 
-![measurements](https://github.com/sergei-sh/christofieds/blob/master/figss/approx.png)
+![measurements](https://github.com/sergei-sh/christofieds/blob/master/figs/approx.png)
 
 ### Installation :
 1) pip3

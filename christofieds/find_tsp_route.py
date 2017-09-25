@@ -22,6 +22,9 @@ def find_tsp_route(dist_mx):
     return - tuple of vertices to follow
     """
 
+    if dist_mx.shape[0] < 2 or dist_mx.shape[0] != dist_mx.shape[1]:
+        raise GraphAlgoException("Malformed distance matrix")
+
 #Refer for set names G, T, O, M, to https://en.wikipedia.org/wiki/Christofides_algorithm
 
 
