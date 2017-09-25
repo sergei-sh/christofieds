@@ -37,9 +37,11 @@ def find_tsp_route(dist_mx):
     (I, i_to_g_converter) = induced_subgraph(dist_mx=G, vertices=O) # ?O(V^2)
     print("I ", I)
 
-    assert I.size == np.count_nonzero(I), """Zero weights are not allowed (would mean 2 vertices are the same"""
-    """in a metric space"""
-    assert not np.any(I < 0), "Negative weights are not allowed in metric space"
+    if not I.size == np.count_nonzero(I):
+        raise GraphAlgoException("""Zero weights are not allowed (would mean 2 vertices are the same"""
+    """in a metric space""")
+    if np.any(I < 0):
+        raise GraphAlgoException("Negative weights are not allowed in metric space")
 
 #Invert all weights so that max_weight_matching gives us minimum-weight matching
 #Weights must be positive (checked above)
@@ -71,7 +73,7 @@ def find_tsp_route(dist_mx):
     eulerian_crt = np.array([v for v in eulerian_crt_gen]).flatten()
     print("Eul: ", eulerian_crt)
     u, idxs = np.unique(eulerian_crt, return_index=True) # O(V^2)
-    hamilton_crt = np.concatenate((eulerian_crt[idxs], np.array([0])), axis=0)
+    hamilton_crt = np.concatenate((eulerian_crt[np.sort(idxs)], np.array([0])), axis=0)
 
     return hamilton_crt
 

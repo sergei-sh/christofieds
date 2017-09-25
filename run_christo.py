@@ -4,7 +4,7 @@ import time
 
 import networkx as nx 
 from christofieds import find_tsp_route, find_tsp_brute
-from graph_algos import half_mx_dist, verify_dist_mx, path_length, INF, graph_dist_mx
+from graph_algos import half_mx_dist, verify_dist_mx, path_length, INF, generate_geometric_dist_mx
 
 """
 half_matrix = np.array([
@@ -26,20 +26,21 @@ np.random.seed(0)
 time_lst = []
 factor = []
 try:
-    for vert in range(3, 60):
-        tsp = half_mx_dist(np.random.randint(low=1, high=100, size=(vert, vert)))
+    for vert in range(2, 12):
+        tsp = generate_geometric_dist_mx(vert)
         
         tm = time.time()
         route = find_tsp_route(tsp)
-        print("Route found: ", route)
         delta_tm = time.time() - tm
-        length = path_length(tsp, path=route)
 
+        length = path_length(tsp, path=route)
+        print("Route found: ", route, length)
         fact = 0
         if vert < 9:
-            print(tsp)
-            route_b, len_b = find_tsp_brute(tsp)
-            fact = length/len_b
+             print(tsp)
+        route_b, len_b = find_tsp_brute(tsp)
+        print("Route brute: ", route_b)
+        fact = length/len_b
         factor.append(fact)
 
         print("Length Christofieds: {}, Length Brute: {},  approx {}".format(length, len_b, fact))
