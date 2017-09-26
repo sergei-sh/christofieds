@@ -26,7 +26,7 @@ np.random.seed(0)
 time_lst = []
 factor = []
 try:
-    for vert in range(2, 12):
+    for vert in range(3, 12):
         tsp = generate_geometric_dist_mx(vert)
         
         tm = time.time()

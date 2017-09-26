@@ -1,2 +1,3 @@
 -add checks
 -change print to debug logging
+-handle 1-vertex case

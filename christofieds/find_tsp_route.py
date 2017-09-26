@@ -12,7 +12,7 @@ Currently uses NetworkX for Blossom algorithm and graph_algos for other algorith
 import networkx as nx
 import numpy as np
 
-from graph_algos import prims_mst, INF, induced_subgraph
+from graph_algos import prims_mst, INF, induced_subgraph, odd_vertices, eulerian_circuit, verify_dist_mx
 
 def find_tsp_route(dist_mx):
     """Implements Chrisofieds algorithm to find a minimum-weight circuit (1.5 approximate) in a complete weighted
@@ -22,8 +22,10 @@ def find_tsp_route(dist_mx):
     return - tuple of vertices to follow
     """
 
-    if dist_mx.shape[0] < 2 or dist_mx.shape[0] != dist_mx.shape[1]:
-        raise GraphAlgoException("Malformed distance matrix")
+    if dist_mx.shape[0] < 3:
+        raise ValueError("Need at least 3 vertices")
+
+    verify_dist_mx(dist_mx)
 
 #Refer for set names G, T, O, M, to https://en.wikipedia.org/wiki/Christofides_algorithm
 
@@ -41,10 +43,10 @@ def find_tsp_route(dist_mx):
     print("I ", I)
 
     if not I.size == np.count_nonzero(I):
-        raise GraphAlgoException("""Zero weights are not allowed (would mean 2 vertices are the same"""
+        raise ValueError("""Zero weights are not allowed (would mean 2 vertices are the same"""
     """in a metric space""")
     if np.any(I < 0):
-        raise GraphAlgoException("Negative weights are not allowed in metric space")
+        raise ValueError("Negative weights are not allowed in metric space")
 
 #Invert all weights so that max_weight_matching gives us minimum-weight matching
 #Weights must be positive (checked above)
@@ -72,7 +74,7 @@ def find_tsp_route(dist_mx):
     H = T_mg 
     print("H ", H.edges())
 
-    eulerian_crt_gen = nx.eulerian_circuit(H) # ?O(V + E)
+    eulerian_crt_gen = nx.eulerian_circuit(H) # O((V + E))
     eulerian_crt = np.array([v for v in eulerian_crt_gen]).flatten()
     print("Eul: ", eulerian_crt)
     u, idxs = np.unique(eulerian_crt, return_index=True) # O(V^2)
@@ -90,17 +92,6 @@ def dist_mx_to_networkx(dist_mx, netx_obj=nx.Graph):
     #remove INF edges   
     graph.remove_edges_from(zip(inf_coord[0], inf_coord[1]))
     return graph
-
-def odd_vertices(dist_mx):
-    """Take odd degree vertices from a graph   
-
-    dist_mx - distance matrix
-    return - tuple of vertices
-    """
-    return np.where(
-        [(np.sum(dist_mx[row] != INF) % 2 == 1) 
-        for row in range(0, dist_mx.shape[0])]
-        )[0] 
 
     
 
