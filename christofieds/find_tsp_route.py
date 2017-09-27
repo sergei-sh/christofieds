@@ -12,6 +12,7 @@ Currently uses NetworkX for Blossom algorithm and graph_algos for other algorith
 import networkx as nx
 import numpy as np
 
+from christofieds.logging import log_debug
 from graph_algos import prims_mst, INF, induced_subgraph, odd_vertices, eulerian_circuit, verify_dist_mx
 
 def find_tsp_route(dist_mx):
@@ -35,12 +36,12 @@ def find_tsp_route(dist_mx):
 #Extract Minimum Spanning Tree    
     T = prims_mst(dist_mx=G) # O(V^2)
 #Vertices with odd degree of MST
-    print("MST", T)
+    log_debug("MST", T)
     O = odd_vertices(dist_mx=T) #O(V^2)
-    print("O ", O)
+    log_debug("O ", O)
 #Induced subgraph of G by O 
     (I, i_to_g_converter) = induced_subgraph(dist_mx=G, vertices=O) # ?O(V^2)
-    print("I ", I)
+    log_debug("I ", I)
 
     if not I.size == np.count_nonzero(I):
         raise ValueError("""Zero weights are not allowed (would mean 2 vertices are the same"""
@@ -53,10 +54,10 @@ def find_tsp_route(dist_mx):
     I_inv = np.float_power(I, -1) # O(V^2)
 
     graph_I = nx.from_numpy_matrix(A=I_inv)
-    print("Ix ", graph_I)
+    log_debug("Ix ", graph_I)
 #Find a minimum-weight perfect matching
     dict_min = nx.max_weight_matching(G=graph_I, maxcardinality=True) # O(V^3)
-    print("Perf matching: ", dict_min)
+    log_debug("Perf matching: ", dict_min)
 #Returns dictionary where each edge is doubled. I don't know why. The input Graph is clearly not
 #a DiGraph...
     M = nx.Graph()
@@ -64,7 +65,7 @@ def find_tsp_route(dist_mx):
         for k, v 
         in dict_min.items()]) # O(E)
 
-    print("M ", M.edges())        
+    log_debug("M ", M.edges())        
 
 # Compose MST and p.matching    
     M_mg = nx.MultiGraph(M)
@@ -72,11 +73,11 @@ def find_tsp_route(dist_mx):
     
     T_mg.add_edges_from(M_mg.edges()) # ?O(2V)
     H = T_mg 
-    print("H ", H.edges())
+    log_debug("H ", H.edges())
 
     eulerian_crt_gen = nx.eulerian_circuit(H) # O((V + E))
     eulerian_crt = np.array([v for v in eulerian_crt_gen]).flatten()
-    print("Eul: ", eulerian_crt)
+    log_debug("Eul: ", eulerian_crt)
     u, idxs = np.unique(eulerian_crt, return_index=True) # O(V^2)
     hamilton_crt = np.concatenate((eulerian_crt[np.sort(idxs)], np.array([0])), axis=0)
 
